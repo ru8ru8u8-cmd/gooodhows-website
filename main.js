@@ -1,11 +1,19 @@
 const config = window.GOOODHOWS_CONFIG
-const state = { articles: [], period: 'recent', metric: 'views' }
+const state = { articles: [], threads: [], period: 'recent', metric: 'views' }
 
 async function publishedArticles() {
   const response = await fetch(`${config.supabaseUrl}/rest/v1/website_articles?select=post_id,slug,title,body,image_url,category,tags,original_permalink,threads_published_at,views,likes,metrics_updated_at,featured,published_at&visible=eq.true&order=threads_published_at.desc&limit=200`, {
     headers: { apikey: config.publishableKey }
   })
   if (!response.ok) throw new Error('目前無法讀取文章')
+  return response.json()
+}
+
+async function threadsRanking() {
+  const response = await fetch(`${config.supabaseUrl}/rest/v1/website_threads_ranking?select=post_id,title,threads_url,threads_published_at,views,likes,metrics_updated_at&order=threads_published_at.desc&limit=200`, {
+    headers: { apikey: config.publishableKey }
+  })
+  if (!response.ok) throw new Error('目前無法讀取 Threads 排行')
   return response.json()
 }
 
@@ -47,7 +55,7 @@ function renderFeatured() {
 function renderRanking() {
   const root = document.querySelector('#ranking-list')
   const cutoff = Date.now() - 30 * 86400000
-  const rows = state.articles
+  const rows = state.threads
     .filter((article) => state.period === 'all' || (article.threads_published_at && Date.parse(article.threads_published_at) >= cutoff))
     .filter((article) => article[state.metric] != null)
     .sort((a, b) => b[state.metric] - a[state.metric])
@@ -56,14 +64,16 @@ function renderRanking() {
     root.className = 'ranking-empty'
     root.replaceChildren()
     const message = document.createElement('p')
-    message.textContent = '這個榜單目前沒有已發布的文章與數據'
+    message.textContent = '這個期間目前沒有 Threads 貼文與數據'
     root.append(message)
     return
   }
   root.className = 'ranking-rows'
   root.replaceChildren(...rows.map((article, index) => {
     const link = document.createElement('a')
-    link.href = `article.html?slug=${encodeURIComponent(article.slug)}`
+    link.href = article.threads_url
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
     const no = document.createElement('b')
     no.textContent = String(index + 1).padStart(2, '0')
     const title = document.createElement('span')
@@ -93,6 +103,10 @@ document.querySelectorAll('.segmented button').forEach((button) => {
 publishedArticles().then((articles) => {
   state.articles = articles
   renderFeatured()
+}).catch(() => {})
+
+threadsRanking().then((posts) => {
+  state.threads = posts
   renderRanking()
 }).catch(() => {
   document.querySelector('#ranking-list').textContent = '目前無法讀取排行，請稍後再試'
