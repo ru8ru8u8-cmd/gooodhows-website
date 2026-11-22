@@ -6,7 +6,7 @@ const axes = [
   { letters: ['Q', 'G'], title: '步調', labels: ['查清楚再走', '邊協作邊前進'], descriptions: ['簽字之前，先把風險、證據與退路弄明白', '資訊還不完整時，你傾向先一起推動下一步'] }
 ]
 
-const questions = [
+const fallbackQuestions = [
   { scene: '01 / 搬家倒數', title: '隔壁說，八年後就有新房，你第一個問題是？', context: '老屋漏水、沒有電梯，大家都想重建，只有那個「八年」聽起來很長', axis: 0, options: ['「等等，我這八年住哪裡？家裡那隻貓又住哪裡？」', '「八年換一間更安全的新家，我可以開始規劃」'], sources: [1, 36] },
   { scene: '02 / 一樓店面', title: '你家的店面每個月都有租金，樓上卻急著拆，你會？', context: '海砂屋鑑定可能影響營業，鄰居也真的在擔心水泥掉下來', axis: 1, options: ['先把店面使用和租金中斷怎麼處理談清楚', '先確認店面估價與重建後分回，再決定是否接受'], sources: [5, 28] },
   { scene: '03 / 沒有建商的提案', title: '有人說：「我們自己蓋，建商那一份就省下來！」', context: '前提是地主得自己籌錢、找顧問、選營造廠，還要一起扛追加預算', axis: 2, options: ['如果能組好團隊，我想自己參與每個決定', '我想找有實績的專業團隊，訂好監督和交付標準'], sources: [7, 31] },
@@ -48,9 +48,40 @@ const ui = {
   result: document.querySelector('#quiz-result'), title: document.querySelector('#question-title'),
   options: document.querySelector('#question-options'), context: document.querySelector('#question-context')
 }
+let questions = fallbackQuestions
+let questionPool = fallbackQuestions
 let answers = Array(questions.length).fill(null)
 let current = 0
 const validCode = code => /^[NF][HV][OE][QG]$/.test(code)
+
+async function loadQuestionBank() {
+  try {
+    const cfg = window.GOOODHOWS_CONFIG
+    const response = await fetch(`${cfg.supabaseUrl}/rest/v1/website_quiz_questions?select=id,scene,title,context,axis,options,source_url&active=eq.true&order=sort_order.asc&limit=200`, {
+      headers: { apikey: cfg.publishableKey }, cache: 'no-store'
+    })
+    if (!response.ok) throw new Error('question bank unavailable')
+    const rows = await response.json()
+    const valid = rows.filter(q => Number.isInteger(q.axis) && q.axis >= 0 && q.axis < 4 &&
+      typeof q.title === 'string' && Array.isArray(q.options) && q.options.length === 2 &&
+      q.options.every(option => typeof option === 'string' && option.trim()))
+    if (axes.every((_, axis) => valid.filter(q => q.axis === axis).length >= 3)) questionPool = valid
+  } catch { /* Keep the original questions available when the network is offline */ }
+}
+
+function newRound() {
+  const groups = axes.map((_, axis) => {
+    const group = questionPool.filter(q => q.axis === axis)
+    for (let i = group.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[group[i], group[j]] = [group[j], group[i]]
+    }
+    return group.slice(0, 3)
+  })
+  questions = Array.from({ length: 3 }, (_, n) => groups.map(group => group[n])).flat()
+  answers = Array(questions.length).fill(null)
+  current = 0
+}
 
 function show(screen) {
   for (const [key, node] of Object.entries({ start: ui.start, question: ui.question, result: ui.result })) node.hidden = key !== screen
@@ -60,7 +91,7 @@ function show(screen) {
 function renderQuestion() {
   const q = questions[current]
   show('question')
-  document.querySelector('#progress-label').textContent = String(current + 1).padStart(2, '0') + ' / 12'
+  document.querySelector('#progress-label').textContent = String(current + 1).padStart(2, '0') + ' / ' + questions.length
   document.querySelector('.quiz-progress-track').setAttribute('aria-valuenow', String(current))
   document.querySelector('#progress-fill').style.width = (current / questions.length * 100) + '%'
   document.querySelector('#question-scene').textContent = q.scene
@@ -123,12 +154,18 @@ function renderResult(code) {
     : '願意合作是優點；簽文件、搬屋或先出資時，仍要把條件、時程與退路寫明白'
   const references = [selected[0] === 0 ? 1 : 24, selected[1] === 0 ? 45 : 2, selected[2] === 0 ? 7 : 33, selected[3] === 0 ? 12 : 16]
   const links = document.querySelector('#result-links')
-  links.replaceChildren(...references.map(id => {
+  const roundStories = questions.filter(q => {
+    try { const url = new URL(q.source_url); return url.protocol === 'https:' && /(^|\.)threads\.(com|net)$/.test(url.hostname) }
+    catch { return false }
+  })
+    .map(q => ({ title: q.scene.replace(/^\d+\s*\/\s*/, ''), url: q.source_url }))
+  const related = roundStories.length ? roundStories.slice(0, 4) : references.map(id => ({ title: stories[id][0], url: 'https://www.threads.com/@gooodhows/post/' + stories[id][1] }))
+  links.replaceChildren(...related.map(story => {
     const link = document.createElement('a')
-    link.href = 'https://www.threads.com/@gooodhows/post/' + stories[id][1]
+    link.href = story.url
     link.target = '_blank'
     link.rel = 'noopener noreferrer'
-    link.textContent = stories[id][0] + ' ↗'
+    link.textContent = story.title + ' ↗'
     return link
   }))
   history.replaceState(null, '', '#result=' + code)
@@ -136,9 +173,9 @@ function renderResult(code) {
   document.querySelector('#result-title').focus({ preventScroll: true })
 }
 
-function restart() {
-  answers = Array(questions.length).fill(null)
-  current = 0
+async function restart() {
+  await loadQuestionBank()
+  newRound()
   history.replaceState(null, '', location.pathname + location.search)
   renderQuestion()
 }

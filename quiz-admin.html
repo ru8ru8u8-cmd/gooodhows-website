@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>屋主測驗題庫｜更好拾光</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>.quiz-editor-list{max-height:65vh;overflow:auto;margin-top:18px}.quiz-editor-list .draft-item{border:1px solid #e2e0d7}.admin-actions a{display:inline-block;margin-right:14px;font-size:13px;text-decoration:underline}</style>
+</head>
+<body><div class="site-shell inner-shell">
+  <header class="inner-header"><a class="wordmark" href="index.html">更好拾光</a><a href="admin.html">← 文章管理</a></header>
+  <main class="inner-main admin-main">
+    <span class="section-index">EDITORIAL DESK / QUIZ</span><h1>屋主測驗題庫</h1>
+    <p>Threads 新貼文進入候選清單，改寫成兩種都合理的選擇後才公開<br>每個性格軸至少保留 3 題，測驗每次各抽 3 題</p>
+    <p id="quiz-admin-message" role="status" aria-live="polite">正在檢查登入狀態</p>
+    <section id="quiz-login" class="admin-panel" hidden><h2>請先登入文章管理後台</h2><a href="admin.html">前往登入 ↗</a></section>
+    <section id="quiz-dashboard" hidden>
+      <div class="admin-layout">
+        <aside class="admin-panel"><h2>已建立的題目</h2><button type="button" id="new-question">＋ 新增題目</button><div id="question-list" class="quiz-editor-list"></div></aside>
+        <form id="quiz-editor" class="admin-panel"><input type="hidden" name="id"><h2>編輯情境題</h2>
+          <label>從 Threads 選素材<select name="source"><option value="">自行撰寫，暫不連結貼文</option></select></label>
+          <label>題目所屬傾向<select name="axis" required><option value="0">時間：眼前／未來</option><option value="1">價值：記憶／資產</option><option value="2">主導：自己／專業</option><option value="3">步調：查核／協作</option></select></label>
+          <label>場景短標<input name="scene" required maxlength="80" placeholder="13 / 隔壁的提案"></label>
+          <label>情境問題<input name="title" required maxlength="180"></label>
+          <label>補充背景<textarea name="context" rows="3" maxlength="500"></textarea></label>
+          <label>A 選項（左側傾向）<textarea name="option_a" rows="2" required maxlength="350"></textarea></label>
+          <label>B 選項（右側傾向）<textarea name="option_b" rows="2" required maxlength="350"></textarea></label>
+          <label>原貼文網址<input name="source_url" type="url" placeholder="https://www.threads.com/@gooodhows/post/..."></label>
+          <label class="check-label"><input name="active" type="checkbox">公開到測驗題庫</label>
+          <div class="editor-buttons"><button type="submit">儲存題目</button></div>
+          <p>只發布已核對的故事情境；修改公開題目會影響之後開始的測驗，不改變已分享的結果類型</p>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script><script src="quiz-admin.js" defer></script>
+</body></html>
