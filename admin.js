@@ -79,6 +79,17 @@ document.querySelector('#login-form').addEventListener('submit',async event=>{
   form.reset();await load()
 })
 document.querySelector('#logout').addEventListener('click',async()=>{await db.auth.signOut();selected=null;editor.hidden=true;show('已登出');await load()})
+document.querySelector('#password-form').addEventListener('submit',async event=>{
+  event.preventDefault()
+  const form=event.currentTarget, status=document.querySelector('#password-message')
+  const password=form.elements.password.value
+  if(password!==form.elements.confirm.value){status.textContent='兩次輸入的密碼不相同';return}
+  const button=form.querySelector('button[type=submit]');button.disabled=true
+  const {error}=await db.auth.updateUser({password})
+  button.disabled=false
+  if(error){status.textContent=`密碼設定失敗：${error.message}`;return}
+  form.reset();status.textContent='密碼已設定。下次可使用電子郵件與新密碼登入。'
+})
 document.querySelector('#save-draft').addEventListener('click',async()=>{if(await save())await load()})
 document.querySelector('#publish-article').addEventListener('click',async()=>{
   const data=await save();if(!data)return
