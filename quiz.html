@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eeece4">
+  <meta name="description" content="12 道都更情境題，測測你是哪一種屋主">
+  <title>都更屋主性格測驗｜更好拾光</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="quiz.css">
+</head>
+<body>
+  <div class="site-shell quiz-shell">
+    <header class="site-header">
+      <a class="wordmark" href="index.html" aria-label="更好拾光，回首頁"><span>更好</span><span>拾光</span><small>GOOODHOWS</small></a>
+      <a class="quiz-exit" href="index.html#quiz">← 回到街上</a>
+    </header>
+    <main class="quiz-page">
+      <section id="quiz-start" class="quiz-screen quiz-intro" aria-labelledby="quiz-page-title">
+        <span class="quiz-kicker">THE HOUSEOWNER FILE / 001</span>
+        <div class="quiz-intro-grid"><div>
+          <h1 id="quiz-page-title">你是哪一種<br><em>都更屋主</em>？</h1>
+          <p>如果某天建商按了門鈴，鄰居也開始敲門，你會先問幾坪、先看合約，還是先擔心家裡的貓要住哪？</p>
+          <p>12 道選擇題，走一趟都更的平行宇宙，看看你最想守住的到底是什麼</p>
+          <button class="quiz-primary" id="start-quiz" type="button">我要進場 ↗</button>
+          <span class="quiz-time">約 4 分鐘 · 不用登入 · 不收集答案</span>
+        </div><div class="quiz-intro-art" aria-hidden="true"><span>⌂</span><strong>?</strong><i>✳</i></div></div>
+        <p class="quiz-disclaimer">這是從更好拾光故事延伸的互動測驗，結果描述情境下的偏好，不是心理診斷，也不是都更決策建議</p>
+      </section>
+      <section id="quiz-question" class="quiz-screen" hidden aria-labelledby="question-title">
+        <div class="quiz-progress-line"><span id="progress-label">01 / 12</span><span>都更進行中 ✳</span></div>
+        <div class="quiz-progress-track" role="progressbar" aria-label="答題進度" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><span id="progress-fill"></span></div>
+        <span class="quiz-kicker" id="question-scene"></span>
+        <h1 id="question-title" tabindex="-1"></h1>
+        <p id="question-context" class="question-context"></p>
+        <div id="question-options" class="question-options" role="group" aria-labelledby="question-title"></div>
+        <button id="previous-question" class="quiz-back" type="button">← 上一題</button>
+      </section>
+      <section id="quiz-result" class="quiz-screen" hidden aria-labelledby="result-title">
+        <div class="result-top"><span class="quiz-kicker">YOUR HOUSEOWNER FILE</span><button id="restart-quiz" class="quiz-back" type="button">再玩一次 ↺</button></div>
+        <div class="result-card" id="result-card">
+          <span class="result-stamp">更好拾光 · 屋主觀察檔案</span>
+          <div class="result-symbol" aria-hidden="true">⌂</div>
+          <p class="result-code" id="result-code"></p>
+          <h1 id="result-title" tabindex="-1"></h1>
+          <p id="result-tagline" class="result-tagline"></p>
+          <p id="result-description" class="result-description"></p>
+        </div>
+        <h2>你的四個選擇傾向</h2>
+        <div id="result-axes" class="result-axes"></div>
+        <div class="result-notes"><div><h2>你的強項</h2><p id="result-strength"></p></div><div><h2>這件事也值得想想</h2><p id="result-blindspot"></p></div></div>
+        <div class="result-story"><span class="quiz-kicker">STORY BEHIND THE QUIZ</span><h2>這些選擇，故事裡有人遇過</h2><p>題目取材自更好拾光的都更故事，角色與情節僅供情境思考</p><div id="result-links"></div></div>
+        <div class="result-actions"><button id="share-result" class="quiz-primary" type="button">分享我的屋主檔案 ↗</button><button id="copy-result" class="quiz-secondary" type="button">複製結果文字</button></div>
+        <p id="share-message" class="share-message" role="status" aria-live="polite"></p>
+        <p class="quiz-disclaimer">同一個人在不同基地、人生階段或條件下，可能做不同選擇；測驗不評價誰比較適合都更</p>
+      </section>
+    </main>
+    <footer><div class="footer-title">更好拾光 <span>↗</span></div><div class="footer-bottom"><span>記錄都更的人與房子</span><span>你家的故事，會怎麼開始？</span><a href="index.html">回首頁 ↗</a></div></footer>
+  </div>
+  <script src="quiz.js" defer></script>
+</body>
+</html>
