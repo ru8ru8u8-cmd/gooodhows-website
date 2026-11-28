@@ -40,11 +40,26 @@ document.querySelectorAll('[data-add-block]').forEach(button=>button.addEventLis
 }))
 
 function suggestCategory(text=''){
-  if(/成本|資金|建商|市場|政策|營造/.test(text))return '產業觀察'
-  if(/同意書|權利變換|分配|法規|流程|容積/.test(text))return '都更白話說'
-  if(/說明會|協調|整合|簽約|現場/.test(text))return '都更現場'
+  for(const rule of window.GOOODHOWS_EDITORIAL_RULES?.categories||[])if(rule.pattern.test(text))return rule.name
   return '房子與人'
 }
+
+function researchSummary(draft){
+  const text=draft.original_text||''
+  const matches=(window.GOOODHOWS_EDITORIAL_RULES?.quizAxes||[]).filter(rule=>rule.pattern.test(text))
+  return `建議分類：${suggestCategory(text)}｜可能相關測驗面向：${matches.length?matches.map(rule=>`${rule.axis} ${rule.theme}`).join('、'):'尚無明確對應'}。這只是關鍵字提示，題目仍須另行審稿。`
+}
+
+document.querySelector('#apply-research').addEventListener('click',()=>{
+  if(!selected?.original_text?.trim()){show('這篇貼文沒有可帶入的原文');return}
+  if((field('title').value.trim()||blocks.some(block=>block.text?.trim()))&&!window.confirm('帶入原文會取代目前未儲存的標題與內文，確定繼續？'))return
+  const text=selected.original_text.trim()
+  const first=text.split(/[\n。！？!?]/).map(line=>line.trim()).find(Boolean)||''
+  field('title').value=first.slice(0,60)
+  field('category').value=suggestCategory(text)
+  blocks=StoryBlocks.parse(text);renderBlockEditor()
+  show('已帶入原文與研究分類，請編輯並確認後儲存；尚未發布')
+})
 
 function show(text){message.textContent=text}
 function field(name){return editor.elements.namedItem(name)}
@@ -76,6 +91,7 @@ async function load(){
 
 function openDraft(draft){
   selected=draft;editor.hidden=false
+  document.querySelector('#research-summary').textContent=researchSummary(draft)
   document.querySelectorAll('.draft-item').forEach(button=>button.classList.toggle('selected',button.dataset.id===draft.post_id))
   field('post_id').value=draft.post_id
   field('title').value=draft.title||''
