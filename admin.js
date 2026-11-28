@@ -5,7 +5,39 @@ const loginPanel=document.querySelector('#login-panel')
 const dashboard=document.querySelector('#dashboard')
 const editor=document.querySelector('#editor-form')
 let drafts=[],publications=new Map(),selected=null
+let blocks=[]
 const categories=['房子與人','都更現場','都更白話說','產業觀察']
+
+const blockNames={paragraph:'段落',heading:'小標題',quote:'引言',image:'圖片',divider:'分隔線'}
+function syncBlocks(){
+  field('body').value=StoryBlocks.serialize(blocks)
+  StoryBlocks.render(blocks,document.querySelector('#story-preview-body'))
+}
+function renderBlockEditor(focusIndex=-1){
+  const list=document.querySelector('#story-block-list');list.replaceChildren()
+  blocks.forEach((block,index)=>{
+    const card=document.createElement('section');card.className='editor-block'
+    const header=document.createElement('div');header.className='editor-block-toolbar'
+    const label=document.createElement('strong');label.textContent=`${String(index+1).padStart(2,'0')} · ${blockNames[block.type]}`
+    const controls=document.createElement('div')
+    for(const [name,icon,disabled,handler] of [
+      ['上移','↑',index===0,()=>{[blocks[index-1],blocks[index]]=[blocks[index],blocks[index-1]];renderBlockEditor(index-1)}],
+      ['下移','↓',index===blocks.length-1,()=>{[blocks[index+1],blocks[index]]=[blocks[index],blocks[index+1]];renderBlockEditor(index+1)}],
+      ['刪除','×',false,()=>{blocks.splice(index,1);renderBlockEditor()}]
+    ]){const button=document.createElement('button');button.type='button';button.textContent=icon;button.title=name;button.setAttribute('aria-label',`${name}${blockNames[block.type]}`);button.disabled=disabled;button.addEventListener('click',handler);controls.append(button)}
+    header.append(label,controls);card.append(header)
+    const input=(key,tag,placeholder)=>{const el=document.createElement(tag);el.value=block[key]||'';el.placeholder=placeholder;el.setAttribute('aria-label',`${blockNames[block.type]}${key==='caption'?'說明':''}`);el.addEventListener('input',()=>{block[key]=el.value;syncBlocks()});card.append(el);return el}
+    if(block.type==='image'){input('url','input','https:// 圖片網址').type='url';input('caption','input','圖片說明（選填）')}
+    else if(block.type==='divider'){const line=document.createElement('hr');card.append(line)}
+    else input('text',block.type==='paragraph'?'textarea':'input',({paragraph:'寫下這段故事…',heading:'這一段的小標題',quote:'值得停下來讀的一句話'})[block.type])
+    list.append(card)
+  })
+  syncBlocks()
+  if(focusIndex>=0)list.children[focusIndex]?.querySelector('textarea,input')?.focus()
+}
+document.querySelectorAll('[data-add-block]').forEach(button=>button.addEventListener('click',()=>{
+  blocks.push({type:button.dataset.addBlock,text:'',url:'',caption:''});renderBlockEditor(blocks.length-1)
+}))
 
 function suggestCategory(text=''){
   if(/成本|資金|建商|市場|政策|營造/.test(text))return '產業觀察'
@@ -47,7 +79,7 @@ function openDraft(draft){
   document.querySelectorAll('.draft-item').forEach(button=>button.classList.toggle('selected',button.dataset.id===draft.post_id))
   field('post_id').value=draft.post_id
   field('title').value=draft.title||''
-  field('body').value=draft.body||''
+  blocks=StoryBlocks.parse(draft.body||'');renderBlockEditor()
   field('image_url').value=draft.image_url||''
   field('category').value=draft.category||suggestCategory(draft.original_text)
   field('tags').value=(draft.tags||[]).join(', ')
@@ -60,6 +92,9 @@ function openDraft(draft){
 
 function values(){
   if(!editor.reportValidity())return null
+  if(!blocks.some(block=>block.type==='image'?/^https?:\/\//i.test(block.url):block.text?.trim())){show('請先寫一段內文');return null}
+  if(blocks.some(block=>block.type==='image' && block.url && !/^https?:\/\//i.test(block.url))){show('圖片網址請使用 https:// 或 http://');return null}
+  syncBlocks()
   return {post_id:selected.post_id,title:field('title').value.trim(),body:field('body').value.trim(),image_url:field('image_url').value.trim()||null,category:field('category').value,tags:field('tags').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),featured:field('featured').checked}
 }
 

@@ -33,7 +33,7 @@ function renderArticle(a) {
   document.title=`${a.title}｜更好拾光`
   const header=document.createElement('div');header.className='article-title'
   header.append(element('span',`${a.category} · ${formatDate(a.threads_published_at)}`,'section-index'),element('h1',a.title))
-  const body=element('div',a.body,'article-body')
+  const body=document.createElement('div');body.className='article-body article-prose';StoryBlocks.render(StoryBlocks.parse(a.body),body)
   root.replaceChildren(header)
   if(a.image_url){const img=document.createElement('img');img.src=a.image_url;img.alt='文章封面';img.className='article-cover';root.append(img)}
   root.append(body)
